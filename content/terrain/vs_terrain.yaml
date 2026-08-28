@@ -1,0 +1,70 @@
+- id: clear
+  display_name: Clear
+  ground_move_cost: 1
+  fly_move_cost: 1
+  cover: none
+  blocks_los: false
+  solid_occupancy: true
+
+- id: road
+  display_name: Road
+  ground_move_cost: 1
+  fly_move_cost: 1
+  cover: none
+  blocks_los: false
+  solid_occupancy: true
+  tags: [road]
+
+- id: wall
+  display_name: Wall
+  ground_move_cost: 2
+  fly_move_cost: 1
+  cover: heavy
+  blocks_los: true
+  solid_occupancy: true
+  tags: [structure, cover]
+
+- id: building
+  display_name: Building
+  ground_move_cost: null
+  fly_move_cost: null
+  cover: heavy
+  blocks_los: true
+  solid_occupancy: false
+  tags: [structure]
+
+- id: wreckage
+  display_name: Wreckage
+  ground_move_cost: 2
+  fly_move_cost: 1
+  cover: heavy
+  blocks_los: false
+  solid_occupancy: true
+  tags: [cover]
+
+- id: trees
+  display_name: Trees
+  ground_move_cost: 2
+  fly_move_cost: 1
+  cover: light
+  blocks_los: true
+  solid_occupancy: true
+  tags: [vegetation, cover]
+
+- id: rubble
+  display_name: Rubble
+  ground_move_cost: 2
+  fly_move_cost: 1
+  cover: light
+  blocks_los: false
+  solid_occupancy: true
+  tags: [cover]
+
+- id: crater
+  display_name: Crater
+  ground_move_cost: 2
+  fly_move_cost: 1
+  cover: light
+  blocks_los: false
+  solid_occupancy: true
+  tags: [cover]

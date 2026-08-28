@@ -1,0 +1,6 @@
+- id: freestyle_vs_15
+  display_name: Freestyle Vertical Slice (15)
+  point_cap: 15
+  objective_type: temple_control
+  map_id: vs_middle_east_50
+  mode: freestyle_vs

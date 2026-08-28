@@ -1,0 +1,303 @@
+- id: friendly_commander
+  display_name: Drone Commander
+  side_availability: [friendly]
+  category: commander
+  size_class: commander
+  roles: [command]
+  point_cost: 0
+  model_count: 1
+  speed: 6
+  attack: 0
+  defense: 10
+  armor: 11
+  hp_per_model: 5
+  weapons: []
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: commander
+  asset_set_id: commander
+
+- id: friendly_infantry_squad
+  display_name: Blue Infantryman
+  side_availability: [friendly]
+  category: soldier_squad
+  size_class: medium
+  roles: [frontline, mobile_damage]
+  point_cost: 10
+  model_count: 10
+  speed: 6
+  attack: 0
+  defense: 10
+  armor: 10
+  hp_per_model: 1
+  weapons: [rifle]
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: infantry
+  asset_set_id: blue_infantry
+
+- id: friendly_ranger_squad
+  display_name: Blue Rangers
+  side_availability: [friendly]
+  category: soldier_squad
+  size_class: medium
+  roles: [recon, mobile_damage]
+  point_cost: 6
+  model_count: 6
+  speed: 8
+  attack: 0
+  defense: 11
+  armor: 10
+  hp_per_model: 1
+  weapons: [rifle]
+  abilities: [drop_smoke, paint_target]
+  movement_traits: [ground]
+  agent_profile_id: ranger
+  asset_set_id: friendly_ranger_squad
+
+- id: friendly_combat_engineers
+  display_name: Blue Combat Engineers
+  side_availability: [friendly]
+  category: soldier_squad
+  size_class: medium
+  roles: [support, anti_armor]
+  point_cost: 6
+  model_count: 3
+  speed: 5
+  attack: 0
+  defense: 8
+  armor: 13
+  hp_per_model: 5
+  weapons: [shotgun]
+  abilities: [detect_mine, deploy_mine]
+  movement_traits: [ground]
+  agent_profile_id: engineer
+  asset_set_id: friendly_combat_engineers
+
+- id: friendly_one_way_drone
+  display_name: Blue One-Way Attack Drone
+  side_availability: [friendly]
+  category: drone
+  size_class: small
+  roles: [disposable, area_damage]
+  point_cost: 3
+  model_count: 1
+  speed: 10
+  attack: 0
+  defense: 12
+  armor: 8
+  hp_per_model: 1
+  weapons: []
+  abilities: [self_destruct]
+  movement_traits: [flying]
+  agent_profile_id: one_way
+  asset_set_id: blue_drone_1a
+
+- id: friendly_direct_attack_drone
+  display_name: Blue Direct Attack Drone
+  side_availability: [friendly]
+  category: drone
+  size_class: small
+  roles: [mobile_damage, area_damage]
+  point_cost: 4
+  model_count: 1
+  speed: 9
+  attack: 0
+  defense: 11
+  armor: 8
+  hp_per_model: 1
+  weapons: [micro_explosive]
+  abilities: []
+  movement_traits: [flying]
+  agent_profile_id: direct_attack
+  asset_set_id: blue_drone_1b
+
+- id: friendly_flanker_drone
+  display_name: Blue Flanker Drone
+  side_availability: [friendly]
+  category: drone
+  size_class: medium
+  roles: [mobile_damage, frontline]
+  point_cost: 6
+  model_count: 1
+  speed: 8
+  attack: 0
+  defense: 8
+  armor: 14
+  hp_per_model: 5
+  weapons: [heavy_rifle]
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: flanker
+  asset_set_id: blue_drone_2a
+
+- id: friendly_commander_support_drone
+  display_name: Blue Commander Support Drone
+  side_availability: [friendly]
+  category: drone
+  size_class: large
+  roles: [support, transport]
+  point_cost: 11
+  model_count: 1
+  speed: 10
+  attack: 0
+  defense: 8
+  armor: 20
+  hp_per_model: 10
+  weapons: [heavy_rifle]
+  abilities: [load_commander, unload_commander]
+  movement_traits: [ground]
+  agent_profile_id: support_transport
+  asset_set_id: friendly_commander_support_drone
+
+- id: friendly_anti_armor_drone
+  display_name: Blue Anti-Armor Drone
+  side_availability: [friendly]
+  category: drone
+  size_class: large
+  roles: [anti_armor, mobile_damage]
+  point_cost: 12
+  model_count: 1
+  speed: 6
+  attack: 0
+  defense: 8
+  armor: 20
+  hp_per_model: 10
+  weapons: [heavy_cannon_12]
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: anti_armor
+  asset_set_id: friendly_anti_armor_drone
+
+- id: opposition_line_cell
+  display_name: Red Infantryman
+  side_availability: [opposition]
+  category: soldier_squad
+  size_class: medium
+  roles: [frontline, mobile_damage]
+  point_cost: 10
+  model_count: 10
+  speed: 6
+  attack: 0
+  defense: 10
+  armor: 10
+  hp_per_model: 1
+  weapons: [rifle]
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: opposition_infantry
+  asset_set_id: red_infantry
+
+- id: opposition_ranger_squad
+  display_name: Red Rangers
+  side_availability: [opposition]
+  category: soldier_squad
+  size_class: medium
+  roles: [recon, mobile_damage]
+  point_cost: 6
+  model_count: 6
+  speed: 8
+  attack: 0
+  defense: 11
+  armor: 10
+  hp_per_model: 1
+  weapons: [rifle]
+  abilities: [drop_smoke, paint_target]
+  movement_traits: [ground]
+  agent_profile_id: opposition_ranger
+  asset_set_id: opposition_ranger_squad
+
+- id: opposition_combat_engineers
+  display_name: Red Combat Engineers
+  side_availability: [opposition]
+  category: soldier_squad
+  size_class: medium
+  roles: [support, anti_armor]
+  point_cost: 6
+  model_count: 3
+  speed: 5
+  attack: 0
+  defense: 8
+  armor: 13
+  hp_per_model: 5
+  weapons: [shotgun]
+  abilities: [detect_mine, deploy_mine]
+  movement_traits: [ground]
+  agent_profile_id: opposition_engineer
+  asset_set_id: opposition_combat_engineers
+
+- id: opposition_impact_drone
+  display_name: Red One-Way Dog Drone
+  side_availability: [opposition]
+  category: drone
+  size_class: small
+  roles: [disposable, area_damage]
+  point_cost: 3
+  model_count: 1
+  speed: 10
+  attack: 0
+  defense: 12
+  armor: 8
+  hp_per_model: 1
+  weapons: []
+  abilities: [self_destruct]
+  movement_traits: [flying]
+  agent_profile_id: opposition_one_way
+  asset_set_id: opposition_impact_drone
+
+- id: opposition_burst_drone
+  display_name: Red Direct Attack Dog Drone
+  side_availability: [opposition]
+  category: drone
+  size_class: small
+  roles: [mobile_damage]
+  point_cost: 4
+  model_count: 1
+  speed: 9
+  attack: 0
+  defense: 11
+  armor: 8
+  hp_per_model: 1
+  weapons: [heavy_rifle]
+  abilities: []
+  movement_traits: [flying]
+  agent_profile_id: opposition_burst
+  asset_set_id: red_dog
+
+- id: opposition_tank
+  display_name: Red Tank
+  side_availability: [opposition]
+  category: drone
+  size_class: large
+  roles: [anti_armor, frontline]
+  point_cost: 10
+  model_count: 1
+  speed: 6
+  attack: 0
+  defense: 8
+  armor: 20
+  hp_per_model: 10
+  weapons: [heavy_cannon]
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: opposition_tank
+  asset_set_id: red_tank
+
+- id: opposition_commander
+  display_name: Red Commander
+  side_availability: [opposition]
+  category: commander
+  size_class: commander
+  roles: [command]
+  point_cost: 0
+  model_count: 1
+  speed: 6
+  attack: 0
+  defense: 8
+  armor: 20
+  hp_per_model: 10
+  weapons: []
+  abilities: []
+  movement_traits: [ground]
+  agent_profile_id: opposition_commander
+  asset_set_id: red_commander

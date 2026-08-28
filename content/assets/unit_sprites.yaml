@@ -1,0 +1,119 @@
+# Unit sprite folders under frontend/public/assets/units/
+# art_face: 1 = sprite faces right in source art, -1 = faces left (Pixi flips for opposite travel)
+# map_scale: battlefield size vs default hex fit (1 = default; 2 = twice; 0.5 = half)
+# Regenerate public copies: python scripts/sync_unit_assets.py
+
+units:
+  blue_infantry:
+    folder: blue-infantryman
+    art_face: 1
+    ready: ready.png
+    walk: [walk1.png, walk1_5.png, walk2.png, walk2_5.png, walk3.png, walk4.png, walk4_5.png, walk5.png, walk5_5.png, walk6.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  friendly_ranger_squad:
+    folder: blue-ranger
+    art_face: -1
+    ready: ready.png
+    walk: [walk1.png, walk2.png, walk3.png, walk4.png, walk5.png, walk6.png, walk7.png, walk8.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  friendly_combat_engineers:
+    folder: blue-engineer
+    art_face: 1
+    ready: ready.png
+    walk: [walk1.png, walk2.png, walk3.png, walk4.png, walk5.png, walk6.png, walk7.png, walk8.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+    deploy: [deploy1.png, deploy2.png, deploy3.png, deploy4.png, deploy5.png, deploy6.png, deploy7.png, deploy8.png]
+
+  blue_drone_1a:
+    folder: blue-one-way-drone
+    art_face: -1
+    map_scale: 0.5
+    ready: ready.png
+    fly: [fly1.png, fly2.png, fly3.png, fly4.png]
+
+  blue_drone_1b:
+    folder: blue-direct-attack-drone
+    art_face: -1
+    map_scale: 0.5
+    ready: ready.png
+    ready_empty: empty.png
+    fly: [fly1.png, fly2.png, fly3.png, fly4.png]
+    fly_empty: [fly1-empty.png, fly2-empty.png, fly3-empty.png, fly4-empty.png]
+
+  blue_drone_2a:
+    folder: blue-flanker-drone
+    art_face: -1
+    map_scale: 0.5
+    ready: ready.png
+    roll: [roll1.png, roll2.png, roll3.png, roll4.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  friendly_commander_support_drone:
+    folder: blue-commander-support-drone
+    art_face: -1
+    map_scale: 2
+    ready: ready.png
+    roll: [roll1.png, roll2.png, roll3.png, roll4.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  friendly_anti_armor_drone:
+    folder: blue-anti-armor-drone
+    art_face: -1
+    map_scale: 2
+    ready: ready.png
+    roll: [roll1.png, roll2.png, roll3.png, roll4.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  red_infantry:
+    folder: red-infantryman
+    art_face: -1
+    ready: ready.png
+    walk: [walk1.png, walk2.png, walk3.png, walk4.png, walk5.png, walk6.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  opposition_ranger_squad:
+    folder: red-ranger
+    art_face: 1
+    ready: ready.png
+    walk: [walk1.png, walk2.png, walk3.png, walk4.png, walk5.png, walk6.png, walk7.png, walk8.png, walk9.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  opposition_combat_engineers:
+    folder: red-engineer
+    art_face: 1
+    ready: ready.png
+    walk: [walk1.png, walk2.png, walk3.png, walk4.png, walk5.png, walk6.png, walk7.png, walk8.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+    deploy: [deploy1.png, deploy2.png, deploy3.png, deploy4.png, deploy5.png, deploy6.png, deploy7.png, deploy8.png]
+
+  red_dog:
+    folder: red-direct-attack-dog
+    art_face: -1
+    map_scale: 0.5
+    ready: ready.png
+    run: [run1.png, run2.png, run3.png, run4.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png]
+
+  opposition_impact_drone:
+    folder: red-one-way-dog
+    art_face: -1
+    map_scale: 0.5
+    ready: ready.png
+    run: [run1.png, run2.png, run3.png, run4.png]
+
+  red_tank:
+    folder: red-tank
+    art_face: -1
+    ready: ready.png
+    roll: [roll1.png, roll2.png, roll3.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]
+
+  red_commander:
+    folder: red-commander
+    art_face: -1
+    map_scale: 1.5
+    ready: ready.png
+    roll: [roll1.png, roll2.png, roll3.png, roll4.png]
+    shoot: [shoot1.png, shoot2.png, shoot3.png, shoot4.png]

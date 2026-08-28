@@ -1,0 +1,56 @@
+﻿id: vs_middle_east_50
+display_name: Middle East Contested Grid
+width: 50
+height: 50
+ground_asset: /assets/maps/middle-east/tile.png
+select_asset: /assets/maps/middle-east/select.png
+friendly_deploy_rows: [45, 46, 47, 48, 49]
+opposition_deploy_rows: [0, 1, 2, 3, 4]
+terrain:
+  # Central corridor / contact zone
+  - {q: 22, r: 22, terrain_id: rubble}
+  - {q: 23, r: 22, terrain_id: rubble}
+  - {q: 24, r: 22, terrain_id: wall}
+  - {q: 25, r: 22, terrain_id: wall}
+  - {q: 26, r: 22, terrain_id: wall}
+  - {q: 27, r: 22, terrain_id: rubble}
+  - {q: 24, r: 23, terrain_id: crater}
+  - {q: 25, r: 23, terrain_id: road}
+  - {q: 26, r: 23, terrain_id: crater}
+  - {q: 25, r: 24, terrain_id: road}
+  - {q: 25, r: 25, terrain_id: road}
+  - {q: 25, r: 26, terrain_id: road}
+  - {q: 24, r: 26, terrain_id: rubble}
+  - {q: 26, r: 26, terrain_id: rubble}
+  - {q: 23, r: 27, terrain_id: building}
+  - {q: 24, r: 27, terrain_id: building}
+  - {q: 27, r: 27, terrain_id: wreckage}
+  # Northern approaches (opposition side of midfield)
+  - {q: 18, r: 12, terrain_id: wall}
+  - {q: 19, r: 12, terrain_id: wall}
+  - {q: 20, r: 12, terrain_id: wall}
+  - {q: 30, r: 14, terrain_id: building}
+  - {q: 31, r: 14, terrain_id: building}
+  - {q: 32, r: 15, terrain_id: rubble}
+  - {q: 15, r: 16, terrain_id: wreckage}
+  - {q: 35, r: 18, terrain_id: crater}
+  - {q: 28, r: 10, terrain_id: rubble}
+  - {q: 12, r: 20, terrain_id: wall}
+  - {q: 13, r: 20, terrain_id: wall}
+  # Southern approaches (friendly side of midfield)
+  - {q: 20, r: 34, terrain_id: rubble}
+  - {q: 21, r: 34, terrain_id: rubble}
+  - {q: 30, r: 32, terrain_id: building}
+  - {q: 31, r: 32, terrain_id: wall}
+  - {q: 32, r: 32, terrain_id: wall}
+  - {q: 16, r: 36, terrain_id: crater}
+  - {q: 34, r: 36, terrain_id: wreckage}
+  - {q: 25, r: 38, terrain_id: wall}
+  - {q: 25, r: 39, terrain_id: wall}
+  - {q: 24, r: 40, terrain_id: rubble}
+  - {q: 26, r: 40, terrain_id: rubble}
+  - {q: 10, r: 30, terrain_id: building}
+  - {q: 40, r: 28, terrain_id: building}
+  - {q: 8, r: 24, terrain_id: wreckage}
+  - {q: 42, r: 24, terrain_id: crater}
+

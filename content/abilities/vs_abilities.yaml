@@ -1,0 +1,133 @@
+- id: satellite_sweep
+  display_name: Satellite Sweep
+  action_cost: minor
+  ram_cost: 3
+  description: Temporarily reveal stealth or decoy units anywhere on the map through end of round.
+  tags: [recon]
+
+- id: airstrike
+  display_name: Airstrike
+  action_cost: minor
+  ram_cost: 6
+  once_per_battle: true
+  area: 3
+  damage: 12
+  range: 20
+  description: Once per battle, call a missile strike on a painted target (AOE 3, +12 damage). Friendly fire applies.
+  tags: [ordnance]
+
+- id: targeting_assistance
+  display_name: Targeting Assistance
+  action_cost: minor
+  ram_cost: 3
+  description: Friendly drones within signal range gain +2 Attack through end of round.
+  tags: [buff]
+
+- id: defense_matrix
+  display_name: Defense Matrix
+  action_cost: minor
+  ram_cost: 2
+  description: Commander gains +4 Defense until the start of your next commander activation.
+  tags: [buff]
+
+- id: call_for_action
+  display_name: Call for Action
+  action_cost: minor
+  ram_cost: 3
+  description: Allied soldier units within signal range gain +2 Speed through end of round.
+  tags: [command]
+
+- id: signal_jamming
+  display_name: Signal Jamming
+  action_cost: minor
+  ram_cost: 3
+  description: Attempt to counter the opposition commander's signal range through end of round.
+  tags: [ew]
+
+- id: spoof_unit_location
+  display_name: Spoof Unit Location
+  action_cost: minor
+  ram_cost: 2
+  description: Create a decoy copy of a friendly unit in signal at a chosen hex. Removed when attacked, swept, or next round.
+  tags: [ew]
+
+- id: self_destruct
+  display_name: Self-Destruct
+  action_cost: minor
+  description: Detonate at current hex (AOE 1, +10 damage).
+  area: 1
+  damage: 10
+  tags: [suicide]
+
+- id: self_destruct_aoe2
+  display_name: Self-Destruct
+  action_cost: minor
+  description: Detonate at current hex (AOE 2, +10 damage).
+  area: 2
+  damage: 10
+  tags: [suicide]
+
+- id: drop_smoke
+  display_name: Drop Smoke
+  action_cost: minor
+  area: 2
+  description: Deploy a self-centered smoke fog (radius 2 hex). Blocks line of sight through smoke hexes and grants light cover to occupants. Lasts 2 rounds.
+  tags: [smoke]
+
+- id: paint_target
+  display_name: Paint Target
+  action_cost: minor
+  range: 12
+  description: Paint one visible enemy. Friendly drone attacks gain +2 Attack against it; enables Airstrike. Lasts until this unit's next activation.
+  tags: [paint]
+
+- id: set_charge
+  display_name: Set Charge
+  action_cost: standard
+  description: Place an explosive charge on a structure or obstacle (standard action). Not used in current loadouts.
+  tags: [explosive]
+
+- id: detect_mine
+  display_name: Detect Mine
+  action_cost: none
+  passive: true
+  range: 5
+  description: Passive aura. Reveal hidden enemy mines within 5 hexes of any living model in this squad.
+  tags: [recon, passive]
+
+- id: deploy_mine
+  display_name: Deploy Mine
+  action_cost: standard
+  area: 1
+  damage: 10
+  description: >
+    Standard action (replaces Attack). Place a hidden anti-personnel mine on an adjacent hex,
+    including hexes occupied by opposition. Triggers when an opposition unit activates on the
+    mined hex or moves onto it. AOE 1, +10 damage, friendly fire applies. Spent after detonation.
+  tags: [explosive]
+
+- id: load_commander
+  display_name: Load Commander
+  action_cost: minor
+  description: Load the Drone Commander aboard the support drone.
+  tags: [transport]
+
+- id: unload_commander
+  display_name: Unload Commander
+  action_cost: minor
+  description: Unload the Drone Commander to the hex below the support drone.
+  tags: [transport]
+
+- id: call_support_drone
+  display_name: Call Support Drone
+  action_cost: minor
+  ram_cost: 0
+  description: Signal the support drone to roll up to 20 hex toward you and load on its turn. Toggles to Leave Support Drone while embarked.
+  tags: [transport, command]
+
+- id: leave_support_drone
+  display_name: Leave Support Drone
+  action_cost: minor
+  ram_cost: 0
+  description: Exit the support drone immediately to the hex below its current position.
+  tags: [transport, command]

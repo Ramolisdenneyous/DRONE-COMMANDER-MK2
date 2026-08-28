@@ -1,0 +1,48 @@
+- id: push_center
+  label: Push Center
+  raw_text: "All units: push and contest the central objective."
+  tags: [advance, objective, center]
+  voice_line: "All units, push the center!"
+  requires_target: false
+
+- id: hold_defend_line
+  label: Hold / Defend Line
+  raw_text: "Hold and defend the line. Do not overextend."
+  tags: [hold, defensive]
+  voice_line: "Hold the line! Defend positions!"
+  requires_target: false
+
+- id: focus_fire
+  label: Focus Fire
+  raw_text: "Focus fire on the designated target."
+  tags: [focus_fire, attack]
+  voice_line: "Focus fire on that target!"
+  requires_target: true
+
+- id: paint_target
+  label: Paint Target
+  raw_text: "Paint the designated target for Airstrike."
+  tags: [paint_target, focus_fire]
+  voice_line: "Paint that target for Airstrike!"
+  requires_target: true
+
+- id: screen_commander
+  label: Screen Commander
+  raw_text: "Screen the commander. Prioritize threats near the commander."
+  tags: [commander_protective, screen]
+  voice_line: "Screen the commander! Cover me!"
+  requires_target: false
+
+- id: advance_and_engage
+  label: Advance and Engage
+  raw_text: "Advance and engage the nearest hostile contacts."
+  tags: [advance, engage, attack]
+  voice_line: "Advance and engage! Attack nearest hostiles!"
+  requires_target: false
+
+- id: custom
+  label: "Custom..."
+  raw_text: ""
+  tags: [custom]
+  voice_line: null
+  requires_target: false

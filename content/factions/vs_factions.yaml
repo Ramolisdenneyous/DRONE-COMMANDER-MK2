@@ -1,0 +1,9 @@
+- id: coalition_blue
+  display_name: Coalition Blue
+  side: friendly
+  doctrine_profile_id: balanced
+
+- id: opposition_red
+  display_name: Opposition Red
+  side: opposition
+  doctrine_profile_id: aggressive

@@ -1,0 +1,71 @@
+- id: rifle
+  display_name: Rifle
+  range: 10
+  damage: 0
+  area: 0
+  ammo: null
+  tags: [ballistic]
+
+- id: shotgun
+  display_name: Shotgun
+  range: 6
+  damage: 2
+  area: 0
+  ammo: null
+  tags: [ballistic]
+
+- id: squad_grenade
+  display_name: Squad Grenade
+  range: 4
+  damage: 8
+  area: 1
+  ammo: 1
+  tags: [explosive, aoe]
+
+- id: micro_explosive
+  display_name: Micro Explosive
+  range: 8
+  damage: 5
+  area: 1
+  ammo: 1
+  tags: [explosive, aoe]
+
+- id: heavy_rifle
+  display_name: Heavy Rifle
+  range: 10
+  damage: 2
+  area: 0
+  ammo: null
+  tags: [ballistic]
+
+- id: heavy_cannon
+  display_name: Heavy Cannon
+  range: 10
+  damage: 10
+  area: 0
+  ammo: null
+  tags: [ballistic, anti_armor]
+
+- id: heavy_cannon_12
+  display_name: Heavy Cannon
+  range: 10
+  damage: 12
+  area: 0
+  ammo: null
+  tags: [ballistic, anti_armor]
+
+- id: anti_armor_missile
+  display_name: Anti-Armor Missile
+  range: 12
+  damage: 12
+  area: 0
+  ammo: null
+  tags: [missile, anti_armor]
+
+- id: commander_sniper
+  display_name: Sniper Rifle
+  range: 14
+  damage: 2
+  area: 0
+  ammo: null
+  tags: [ballistic, suppressed, sniper]

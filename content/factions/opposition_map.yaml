@@ -1,0 +1,8 @@
+friendly_infantry_squad: opposition_line_cell
+friendly_ranger_squad: opposition_ranger_squad
+friendly_combat_engineers: opposition_combat_engineers
+friendly_one_way_drone: opposition_impact_drone
+friendly_direct_attack_drone: opposition_burst_drone
+friendly_flanker_drone: opposition_burst_drone
+friendly_commander_support_drone: opposition_tank
+friendly_anti_armor_drone: opposition_tank

@@ -1,0 +1,57 @@
+# Commander base stats are tied to avatar choice (Relay loadout retired).
+- id: male
+  display_name: Commander Diego Serrano
+  attack: 0
+  defense: 8
+  armor: 12
+  speed: 5
+  hp: 5
+  ram_capacity: 6
+  weapons: [shotgun]
+  allowed_abilities:
+    - satellite_sweep
+    - airstrike
+    - targeting_assistance
+    - defense_matrix
+    - call_for_action
+    - signal_jamming
+    - spoof_unit_location
+  passive: Breacher chassis — shotgun and hardened armor
+
+- id: female
+  display_name: Commander Sanna Koskinen
+  attack: 2
+  defense: 12
+  armor: 10
+  speed: 7
+  hp: 5
+  ram_capacity: 6
+  weapons: [commander_sniper]
+  allowed_abilities:
+    - satellite_sweep
+    - airstrike
+    - targeting_assistance
+    - defense_matrix
+    - call_for_action
+    - signal_jamming
+    - spoof_unit_location
+  passive: Recon marksman — sniper rifle and extended mobility
+
+- id: red_commander
+  display_name: Red Commander
+  attack: 0
+  defense: 8
+  armor: 20
+  speed: 6
+  hp: 10
+  ram_capacity: 6
+  weapons: [heavy_cannon]
+  allowed_abilities:
+    - satellite_sweep
+    - airstrike
+    - targeting_assistance
+    - defense_matrix
+    - call_for_action
+    - signal_jamming
+    - spoof_unit_location
+  passive: Heavy cannon chassis — long-range fire support

@@ -1,0 +1,85 @@
+content_version: vs-0.1.0
+sets:
+  commander:
+    ready: /assets/avatars/Drone-commander-Male.png
+    alt: /assets/avatars/Drone-commander-Female.png
+    frames:
+      walk_male:
+        - /assets/avatars/Drone-commander-Male-walk1.png
+        - /assets/avatars/Drone-commander-Male-walk2.png
+        - /assets/avatars/Drone-commander-Male-walk3.png
+        - /assets/avatars/Drone-commander-Male-walk4.png
+        - /assets/avatars/Drone-commander-Male-walk5.png
+        - /assets/avatars/Drone-commander-Male-walk6.png
+        - /assets/avatars/Drone-commander-Male-walk7.png
+        - /assets/avatars/Drone-commander-Male-walk8.png
+        - /assets/avatars/Drone-commander-Male-walk9.png
+      walk_female:
+        - /assets/avatars/Drone-commander-Female-walk1.png
+        - /assets/avatars/Drone-commander-Female-walk2.png
+        - /assets/avatars/Drone-commander-Female-walk3.png
+        - /assets/avatars/Drone-commander-Female-walk4.png
+        - /assets/avatars/Drone-commander-Female-walk5.png
+        - /assets/avatars/Drone-commander-Female-walk6.png
+        - /assets/avatars/Drone-commander-Female-walk7.png
+        - /assets/avatars/Drone-commander-Female-walk8.png
+        - /assets/avatars/Drone-commander-Female-walk9.png
+  blue_infantry:
+    frames:
+      walk: [/assets/units/blue-infantry/walk1.png, /assets/units/blue-infantry/walk2.png, /assets/units/blue-infantry/walk3.png, /assets/units/blue-infantry/walk4.png]
+      ready: [/assets/units/blue-infantry/walk1.png]
+  blue_drone_1a:
+    frames:
+      fly: [/assets/units/blue-drone-1a/fly1.png, /assets/units/blue-drone-1a/fly2.png, /assets/units/blue-drone-1a/fly3.png]
+      ready: [/assets/units/blue-drone-1a/ready.png]
+  blue_drone_1b:
+    frames:
+      fly: [/assets/units/blue-drone-1b/fly1.png, /assets/units/blue-drone-1b/fly2.png]
+      ready: [/assets/units/blue-drone-1b/ready.png]
+      empty: [/assets/units/blue-drone-1b/empty.png]
+  blue_drone_2a:
+    frames:
+      roll: [/assets/units/blue-drone-2a/roll1.png, /assets/units/blue-drone-2a/roll2.png]
+      fire: [/assets/units/blue-drone-2a/fire1.png]
+      ready: [/assets/units/blue-drone-2a/ready.png]
+  red_infantry:
+    frames:
+      walk: [/assets/units/red-infantry/walk1.png, /assets/units/red-infantry/walk2.png, /assets/units/red-infantry/walk3.png]
+      fire: [/assets/units/red-infantry/fire1.png, /assets/units/red-infantry/fire2.png]
+      ready: [/assets/units/red-infantry/ready1.png]
+  red_dog:
+    frames:
+      run: [/assets/units/red-dog/run1.png, /assets/units/red-dog/run2.png]
+      shoot: [/assets/units/red-dog/shoot1.png]
+      ready: [/assets/units/red-dog/run1.png]
+  red_tank:
+    frames:
+      roll: [/assets/units/red-tank/roll1.png, /assets/units/red-tank/roll2.png]
+      ready: [/assets/units/red-tank/ready.png]
+battlefield:
+  ground: /assets/battlefield/Battlefield-MiddleEast2.jpg
+  terrain:
+    wall: [/assets/battlefield/terrain/Terrain-Walls1.png]
+    building:
+      - /assets/battlefield/terrain/Terrain-building1.png
+      - /assets/battlefield/terrain/Terrain-building2.png
+      - /assets/battlefield/terrain/Terrain-Building-damaged.png
+      - /assets/battlefield/terrain/Terrain-Temple.png
+    rubble:
+      - /assets/battlefield/terrain/Terrain-rock-obstuction1.png
+      - /assets/battlefield/terrain/Terrain-rock-obstuction2.png
+      - /assets/battlefield/terrain/Terrain-rock-obstuction3.png
+      - /assets/battlefield/terrain/Terrain-rock-obstuction4.png
+    crater: [/assets/battlefield/terrain/Terrain-gental-hill.png]
+    wreckage:
+      - /assets/battlefield/terrain/Terrain-rocky-hill.png
+      - /assets/battlefield/terrain/Terrain-steep-hill.png
+    trees: [/assets/battlefield/terrain/Terrain-trees1.png]
+  packs:
+    northern-tundra: /assets/battlefield/terrain/northern-tundra/
+    open-fields: /assets/battlefield/terrain/open-fields/
+    urban-combat: /assets/battlefield/terrain/urban-combat/
+music:
+  battle:
+    - /assets/music/Iron-Mesa-part1.mp3
+    - /assets/music/Iron-Mesa-part2.mp3

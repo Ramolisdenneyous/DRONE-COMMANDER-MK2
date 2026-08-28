@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: drone
+      POSTGRES_PASSWORD: drone
+      POSTGRES_DB: drone_commander_mk2
+    ports:
+      - "5438:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drone -d drone_commander_mk2"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://drone:drone@postgres:5432/drone_commander_mk2
+      CONTENT_ROOT: /app/content
+      # Model/key settings come from env_file (.env). Do not interpolate host shell overrides here.
+    ports:
+      - "8006:8000"
+    volumes:
+      - ./content:/app/content:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE: http://localhost:8006
+    environment:
+      VITE_API_BASE: http://localhost:8006
+    ports:
+      - "5179:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:

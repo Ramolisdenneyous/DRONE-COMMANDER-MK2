@@ -1,0 +1,20 @@
+- id: point_control
+  display_name: Point Control
+  description: Hold the central zone uncontested at round end for 1 VP. First to 5 VP wins.
+  objective_type: zone_control
+  default: true
+
+- id: four_corners
+  display_name: Four Corners
+  description: Four zones between center and corners. Score 1 VP per zone held at round end.
+  objective_type: zone_control
+
+- id: hold_the_line
+  display_name: Hold the Line
+  description: Three zones across the map midline. Score 1 VP per zone held at round end.
+  objective_type: zone_control
+
+- id: capture_the_flags
+  display_name: Capture the Flags
+  description: Grab flags with a unit action. Flags move with the carrier until killed. 1 VP per flag held at round end.
+  objective_type: capture_flags

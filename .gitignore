@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.db
+.env
+
+# Node
+node_modules/
+dist/
+_dist_out/
+*.tsbuildinfo
+
+# Generator job artifacts (local ElevenLabs batch scripts)
+sfx_*_jobs.json
+sfx_jobs.json
+sfx_commander_female_vo.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
