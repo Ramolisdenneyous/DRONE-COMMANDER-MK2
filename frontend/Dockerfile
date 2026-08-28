@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
-ARG VITE_API_BASE=http://localhost:8004
+ARG VITE_API_BASE=http://backend-drone-commander-mk2.railway.internal:8080
 ENV VITE_API_BASE=${VITE_API_BASE}
 RUN npm run build
 
