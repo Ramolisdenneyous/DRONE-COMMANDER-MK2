@@ -121,6 +121,9 @@ type Handlers = {
   onIntroScan?: (playing: boolean) => void;
   onRamAllocate?: (droneId: string) => void;
   onRamReclaim?: (droneId: string) => void;
+  onLoadProgress?: (percent: number) => void;
+  /** Fired once map art/units are drawn — before hex-scan intro animation. */
+  onAssetsReady?: () => void;
 };
 
 const RAM_ICON_URL = "/assets/ui/ram_icon.png";
@@ -217,6 +220,7 @@ export async function createBattlefield(
   host: HTMLElement,
   handlers: Handlers = {}
 ): Promise<BattlefieldHost> {
+  handlers.onLoadProgress?.(4);
   const app = new Application();
   await app.init({
     background: "#050607",
@@ -225,6 +229,7 @@ export async function createBattlefield(
     resolution: Math.min(window.devicePixelRatio || 1, 2),
     autoDensity: true,
   });
+  handlers.onLoadProgress?.(12);
   host.innerHTML = "";
   host.appendChild(app.canvas);
   app.canvas.style.width = "100%";
@@ -1990,11 +1995,14 @@ export async function createBattlefield(
       facingByUnit.clear();
       const w = next.map?.width || 50;
       const h = next.map?.height || 50;
+      handlers.onLoadProgress?.(22);
       await drawGround(w, h, {
         skipHexGrid: shouldIntro,
         groundUrl: next.map?.ground_asset,
       });
+      handlers.onLoadProgress?.(48);
       await drawTerrain(next.map?.terrain || [], next.map?.map_id);
+      handlers.onLoadProgress?.(72);
       didInitialFrame = false;
     }
     if (shouldIntro && !introPlaying) {
@@ -2005,6 +2013,10 @@ export async function createBattlefield(
     }
     drawOverlays(next);
     await drawUnits(next);
+    if (mapChanged) {
+      handlers.onLoadProgress?.(100);
+      handlers.onAssetsReady?.();
+    }
     if (shouldIntro) {
       introPlayedBattleId = battleId;
       await playGridScanIntro(next.map?.width || 50, next.map?.height || 50);

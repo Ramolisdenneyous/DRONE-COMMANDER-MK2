@@ -119,6 +119,8 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
   const [mode, setMode] = useState<Mode>("move");
   const [comms, setComms] = useState<any[]>([]);
   const [customOrderOpen, setCustomOrderOpen] = useState(false);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [diagOpen, setDiagOpen] = useState(false);
   const [diag, setDiag] = useState<any>(null);
   const [directive, setDirective] = useState("");
@@ -706,6 +708,15 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
     (async () => {
       if (!hostRef.current) return;
       const host = await createBattlefield(hostRef.current, {
+        onLoadProgress: (pct) => {
+          if (!cancelled) setLoadProgress(pct);
+        },
+        onAssetsReady: () => {
+          if (!cancelled) {
+            setLoadProgress(100);
+            setMapLoading(false);
+          }
+        },
         onUnitSelected: (id) => {
           selectUnit(id, { userInitiated: true });
         },
@@ -780,7 +791,12 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
       }
       pixiRef.current = host;
       await host.hydrate(battleRef.current);
-    })();
+    })().catch((e) => {
+      if (!cancelled) {
+        setMapLoading(false);
+        onError(e?.message || String(e));
+      }
+    });
     return () => {
       cancelled = true;
       pixiRef.current?.destroy();
@@ -1043,6 +1059,19 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
 
   return (
     <div className={`battle-layout sc-hud ${isPhone ? "phone-battle" : ""}`}>
+      {mapLoading && (
+        <div className="battle-load-overlay" role="status" aria-live="polite" aria-busy="true">
+          <img
+            className="battle-load-logo"
+            src="/assets/ui/battle-loading-logo.png"
+            alt="Drone Commander"
+          />
+          <div className="battle-load-bar" aria-hidden="true">
+            <div className="battle-load-bar-fill" style={{ width: `${loadProgress}%` }} />
+          </div>
+          <span className="visually-hidden">Loading battlefield… {loadProgress}%</span>
+        </div>
+      )}
       <div className="battle-top row">
         <strong className="battle-round">R{battle.round}</strong>
         <span className="objective">
