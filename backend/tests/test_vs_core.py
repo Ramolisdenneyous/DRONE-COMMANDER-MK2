@@ -1911,3 +1911,24 @@ def test_opposition_commander_advances_when_allies_engaged():
     assert dest
     assert dest[0]["r"] > red.position.r
 
+
+def test_standing_order_events_do_not_bump_state_version():
+  from app.domain.events import DomainEvent
+  from app.engine.battle import create_battle
+
+  prep = {
+      "avatar": "male",
+      "loadout_id": "male",
+      "ram_abilities": ["defense_matrix"],
+      "mode": "freestyle_vs",
+      "mission_id": "freestyle_vs_15",
+      "point_cap": 15,
+      "army": [{"definition_id": "friendly_infantry_squad", "count": 1}],
+  }
+  battle = create_battle("s-standing-order", prep, seed=3)
+  v0 = battle.state_version
+  battle.append_standing_order_events([DomainEvent(type="directive_updated", payload={"order_id": "advance"})])
+  assert battle.state_version == v0
+  battle.append_events([DomainEvent(type="unit_moved", payload={})])
+  assert battle.state_version == v0 + 1
+

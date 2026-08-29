@@ -76,6 +76,8 @@ export type BattlefieldHost = {
   centerOnUnit: (unitId: string) => void;
   /** Zoom in for playable hex clicking if currently at deploy overview. */
   ensurePlayZoom: (unitId?: string | null) => void;
+  /** Max zoom on a unit (control phase on phone). */
+  zoomToMaxOnUnit: (unitId: string) => void;
   zoomBy: (factor: number) => void;
   playMoveAnimation: (args: {
     unitId: string;
@@ -529,6 +531,30 @@ export async function createBattlefield(
     });
   }
 
+  /** After hex scan intro — control phase on phone needs max zoom on commander, not overview. */
+  function finishIntroFraming() {
+    const cp = battle?.control_phase;
+    const inFriendlyCp = !!(cp?.active && cp?.side === "friendly");
+    if (isPhoneViewport() && inFriendlyCp) {
+      const cmdId =
+        cp?.commander_id ||
+        battle?.commander?.unit_instance_id ||
+        battle?.active_actor_id;
+      if (cmdId) {
+        zoomToMaxOnUnit(cmdId);
+        return;
+      }
+    }
+    scheduleCenterOnMap();
+  }
+
+  function scheduleFinishIntroFraming() {
+    // Defer two frames so host layout/size is final before framing.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => finishIntroFraming());
+    });
+  }
+
   function centerOnActive() {
     if (!battle) return;
     const active =
@@ -572,6 +598,23 @@ export async function createBattlefield(
     }
     if (unitId) centerOnUnit(unitId);
     else centerOnActive();
+  }
+
+  /** Control Phase on phone: max zoom centered on commander so RAM icons are readable. */
+  function zoomToMaxOnUnit(unitId: string) {
+    if (!battle) return;
+    const u = [...(battle.friendly_units || []), ...(battle.opposition_units || [])].find(
+      (x: any) => x.unit_instance_id === unitId
+    );
+    if (!u?.position) return;
+    refreshOverviewFloor();
+    const maxZ = Math.max(MAX_ZOOM, overviewZoom * 3);
+    zoom = maxZ;
+    camera.scale.set(zoom);
+    mapLocked = false;
+    const p = axialToScreen(u.position.q, u.position.r);
+    focusWorld(p.x, p.y);
+    clampCameraToMap();
   }
 
   function sleep(ms: number) {
@@ -1366,9 +1409,8 @@ export async function createBattlefield(
     }
     clearLayer("effects_world");
 
-    // Fit+center after intro. Defer one frame so host layout/size is final —
-    // centering against a 0×0 screen pinned the map to the top-left.
-    scheduleCenterOnMap();
+    // Fit/center after intro. Control Phase on phone overrides with commander max-zoom.
+    scheduleFinishIntroFraming();
     gridSurgeElapsedMs = 0;
     gridPulseEnabled = true;
     pulseHexGrid();
@@ -1805,7 +1847,9 @@ export async function createBattlefield(
           textureCache.set(RAM_ICON_URL, ramTex);
         }
         if (ramTex && gen === unitsDrawGen && !moveAnimating) {
-          const iconSize = Math.max(14, Math.round(R * 0.58));
+          const iconSize = isPhoneViewport()
+            ? Math.max(20, Math.round(R * 0.78))
+            : Math.max(14, Math.round(R * 0.58));
           const cpActive = !!(next.control_phase?.active && next.control_phase.side === "friendly" && !introPlaying);
           for (const plan of ramBadgePlans) {
             const rowY = plan.y + 14;
@@ -1979,6 +2023,43 @@ export async function createBattlefield(
   let last = { x: 0, y: 0 };
   let lastHostW = 0;
   let lastHostH = 0;
+  const activePointers = new Map<number, { x: number; y: number }>();
+  let pinchState: {
+    dist: number;
+    zoom: number;
+    midX: number;
+    midY: number;
+    worldX: number;
+    worldY: number;
+  } | null = null;
+
+  function canvasPoint(e: { clientX: number; clientY: number }) {
+    const rect = app.canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function applyZoomAtScreen(midX: number, midY: number, nextZoom: number) {
+    refreshOverviewFloor();
+    const maxZ = Math.max(MAX_ZOOM, overviewZoom * 3);
+    const worldX = (midX - camera.x) / zoom;
+    const worldY = (midY - camera.y) / zoom;
+    if (nextZoom <= overviewZoom * 1.001) {
+      centerOnMap({ fit: true, mode: "contain", lock: true });
+      return;
+    }
+    zoom = Math.min(maxZ, Math.max(overviewZoom || 0.05, nextZoom));
+    mapLocked = false;
+    camera.scale.set(zoom);
+    camera.x = midX - worldX * zoom;
+    camera.y = midY - worldY * zoom;
+    clampCameraToMap();
+  }
+
+  function clearPointer(id: number) {
+    activePointers.delete(id);
+    if (activePointers.size < 2) pinchState = null;
+    if (activePointers.size === 0) dragging = false;
+  }
   const resizeObserver = new ResizeObserver(() => {
     const { w, h } = viewportSize();
     if (w < 32 || h < 32) return;
@@ -2004,6 +2085,31 @@ export async function createBattlefield(
   resizeObserver.observe(host);
 
   app.canvas.addEventListener("pointerdown", (e) => {
+    const pt = canvasPoint(e);
+    activePointers.set(e.pointerId, pt);
+    try {
+      app.canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+
+    if (activePointers.size === 2) {
+      dragging = false;
+      const pts = [...activePointers.values()];
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      pinchState = {
+        dist: Math.max(dist, 8),
+        zoom,
+        midX,
+        midY,
+        worldX: (midX - camera.x) / zoom,
+        worldY: (midY - camera.y) / zoom,
+      };
+      return;
+    }
+
     // Pan whenever the board is larger than the view (phone mid crops the map).
     if (mapLocked) return;
     if (!battle) return;
@@ -2017,8 +2123,13 @@ export async function createBattlefield(
       last = { x: e.clientX, y: e.clientY };
     }
   });
-  window.addEventListener("pointerup", (e) => {
-    dragging = false;
+  const onPointerUp = (e: PointerEvent) => {
+    clearPointer(e.pointerId);
+    try {
+      if (app.canvas.hasPointerCapture(e.pointerId)) app.canvas.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
     if (!ramDrag) return;
     const ghost = ramDrag.ghost;
     const from = ramDrag.from;
@@ -2053,8 +2164,23 @@ export async function createBattlefield(
     } else if (from === "drone" && fromDroneId && bestId === cp.commander_id) {
       handlers.onRamReclaim?.(fromDroneId);
     }
-  });
+  };
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
   window.addEventListener("pointermove", (e) => {
+    const pt = canvasPoint(e);
+    if (activePointers.has(e.pointerId)) activePointers.set(e.pointerId, pt);
+
+    if (activePointers.size === 2 && pinchState) {
+      const pts = [...activePointers.values()];
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      const scale = dist / Math.max(pinchState.dist, 8);
+      applyZoomAtScreen(midX, midY, pinchState.zoom * scale);
+      return;
+    }
+
     if (ramDrag) {
       const rect = app.canvas.getBoundingClientRect();
       const sx = e.clientX - rect.left;
@@ -2107,6 +2233,7 @@ export async function createBattlefield(
     },
     centerOnUnit,
     ensurePlayZoom,
+    zoomToMaxOnUnit,
     zoomBy,
     playMoveAnimation,
     playAttackFlash,

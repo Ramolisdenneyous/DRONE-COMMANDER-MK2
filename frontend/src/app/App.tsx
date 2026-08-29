@@ -90,8 +90,8 @@ export function App() {
         <div className="panel" style={{ margin: "1rem" }}>
           <h2>Command Brief</h2>
           <p>
-            You are the vulnerable battlefield commander. Move, fight, spend RAM, then issue one army order in the Command
-            Phase. Squads and drones execute that standing order on their activations.
+            You are the vulnerable battlefield commander. Move, fight, and spend RAM on your activation. Issue army orders
+            anytime over the radio — squads and drones follow the latest standing order on their activations, even mid-round.
           </p>
           <button
             className="primary"

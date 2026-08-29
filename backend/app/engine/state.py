@@ -285,6 +285,23 @@ class BattleState:
             envelopes.append(env)
         return envelopes
 
+    def append_standing_order_events(self, domain_events: list[DomainEvent], batch_id: str | None = None) -> list[dict]:
+        """Log directive/comms updates without bumping state_version (safe during agent resolve)."""
+        batch = batch_id or str(uuid4())
+        envelopes: list[dict] = []
+        for ev in domain_events:
+            ev.batch_id = batch
+            self.event_sequence += 1
+            env = ev.to_envelope(
+                session_id=self.session_id,
+                battle_id=self.battle_id,
+                sequence=self.event_sequence,
+                state_version=self.state_version,
+            )
+            self.events.append(env)
+            envelopes.append(env)
+        return envelopes
+
     def living_units(self, side: Side | None = None) -> list[UnitState]:
         units = [u for u in self.units.values() if u.alive]
         if side is not None:

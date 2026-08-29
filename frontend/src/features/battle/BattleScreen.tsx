@@ -53,6 +53,14 @@ function readActionFlags(actions: any): ActionFlags {
   };
 }
 
+function ramAbilityShortName(opt: any, boot: any): string {
+  const aid = opt?.preview?.ability_id;
+  const fromBoot = boot?.abilities?.find((a: any) => a.id === aid);
+  if (fromBoot?.display_name) return fromBoot.display_name;
+  const label = String(opt?.label || "");
+  return label.split(" — ")[0].split(" (")[0].trim() || label;
+}
+
 /** Progressive tab after spending: Move → Attack → RAM → End Activation. */
 function nextCommanderMode(actions: any): Mode {
   const f = readActionFlags(actions);
@@ -100,6 +108,7 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
   const pixiRef = useRef<BattlefieldHost | null>(null);
   const battleRef = useRef(battle);
   const busyRef = useRef(false);
+  const resolvingRef = useRef(false);
   const followActiveRef = useRef(true);
   const [busy, setBusy] = useState(false);
   const [resolving, setResolving] = useState(false);
@@ -109,7 +118,7 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
   const [followActive, setFollowActive] = useState(true);
   const [mode, setMode] = useState<Mode>("move");
   const [comms, setComms] = useState<any[]>([]);
-  const [radioOpen, setRadioOpen] = useState(false);
+  const [customOrderOpen, setCustomOrderOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
   const [diag, setDiag] = useState<any>(null);
   const [directive, setDirective] = useState("");
@@ -122,6 +131,8 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
   } | null>(null);
   const modeRef = useRef<Mode>("move");
   const ramCastRef = useRef(ramCast);
+  const controlPhaseSeenRef = useRef(false);
+  const isPhone = useIsPhone();
   modeRef.current = mode;
   ramCastRef.current = ramCast;
 
@@ -271,18 +282,19 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
   }
 
   function applyBattle(next: any) {
+    battleRef.current = next;
     onUpdate(next);
     if (followActiveRef.current && next.active_actor_id) {
       setSelected(next.active_actor_id);
     }
   }
 
-  function handleConflict(e: unknown): boolean {
+  function handleConflict(e: unknown, opts?: { quiet?: boolean }): boolean {
     if (e instanceof ApiError && e.status === 409) {
       const snap = e.body?.detail?.battle || e.body?.battle;
       if (snap) {
         applyBattle(snap);
-        onError("Board synced — prior command was stale.");
+        if (!opts?.quiet) onError("Board synced — prior command was stale.");
         return true;
       }
     }
@@ -632,7 +644,9 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
 
   async function resolveAgentsFrom(start: any) {
     let current = start;
+    battleRef.current = start;
     setResolving(true);
+    resolvingRef.current = true;
     setFollowActive(true);
     try {
       let guard = 0;
@@ -646,30 +660,40 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
         await new Promise((r) => setTimeout(r, 280));
       }
 
-      while (needsAgentResolve(current) && guard < 40) {
+      while (needsAgentResolve(battleRef.current) && guard < 40) {
         guard += 1;
-        const units = [...(current.friendly_units || []), ...(current.opposition_units || [])];
-        const upcoming = units.find((u: any) => u.unit_instance_id === current.active_actor_id);
+        const snap = battleRef.current;
+        const units = [...(snap.friendly_units || []), ...(snap.opposition_units || [])];
+        const upcoming = units.find((u: any) => u.unit_instance_id === snap.active_actor_id);
         setResolveCue(`Resolving ${upcoming?.display_name || "unit"}…`);
-        setSelected(current.active_actor_id);
-        if (current.active_actor_id) pixiRef.current?.centerOnUnit(current.active_actor_id);
+        setSelected(snap.active_actor_id);
+        if (snap.active_actor_id) pixiRef.current?.centerOnUnit(snap.active_actor_id);
 
-        const res = await api.resolveNext(current.battle_id, current.state_version);
-        await playStepFeedback(res, upcoming?.display_name, upcoming?.side);
-        current = res.battle;
-        applyBattle(current);
-        // Brief beat so the new position / next actor card registers
-        await new Promise((r) => setTimeout(r, 220));
-        if (!res.resolved && !needsAgentResolve(current)) break;
+        try {
+          const res = await api.resolveNext(snap.battle_id, snap.state_version);
+          await playStepFeedback(res, upcoming?.display_name, upcoming?.side);
+          current = res.battle;
+          applyBattle(current);
+          await new Promise((r) => setTimeout(r, 220));
+          if (!res.resolved && !needsAgentResolve(battleRef.current)) break;
+        } catch (e: any) {
+          if (handleConflict(e, { quiet: true })) {
+            guard -= 1;
+            continue;
+          }
+          if (!handleConflict(e)) onError(e.message || String(e));
+          break;
+        }
       }
       setResolveCue(null);
     } catch (e: any) {
-      if (!handleConflict(e)) onError(e.message || String(e));
+      if (!handleConflict(e, { quiet: resolvingRef.current })) onError(e.message || String(e));
     } finally {
+      resolvingRef.current = false;
       setResolving(false);
       setResolveCue(null);
     }
-    return current;
+    return battleRef.current;
   }
 
   useEffect(() => {
@@ -693,6 +717,24 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
           } else {
             setResolveCue(null);
             setBusy(false);
+            // Belt-and-suspenders: intro end can race React control-phase effect on round 1.
+            const current = battleRef.current;
+            const cp = current?.control_phase;
+            if (
+              window.matchMedia("(max-width: 480px)").matches &&
+              cp?.active &&
+              cp?.side === "friendly"
+            ) {
+              const cmdId =
+                cp.commander_id ||
+                current?.commander?.unit_instance_id ||
+                current?.active_actor_id;
+              if (cmdId) {
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => pixiRef.current?.zoomToMaxOnUnit(cmdId));
+                });
+              }
+            }
           }
         },
         onHexSelected: async (hex) => {
@@ -827,6 +869,16 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
     }
   }
 
+  function tryRamAbility(opt: any) {
+    if (busy || resolving || ramCast) return;
+    const blocked = opt?.preview?.blocked_reason;
+    if (opt?.preview?.disabled || blocked) {
+      setResolveCue(blocked || "Ability not available");
+      return;
+    }
+    void act(opt.option_id);
+  }
+
   async function act(optionId: string) {
     setBusy(true);
     try {
@@ -880,7 +932,7 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
       let next = res.battle;
       applyBattle(next);
       setFollowActive(true);
-      setRadioOpen(false);
+      setCustomOrderOpen(false);
       setMode("move");
       if (needsAgentResolve(next)) {
         next = await resolveAgentsFrom(next);
@@ -897,8 +949,10 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
     text = "",
     targetRefs: Array<{ kind: string; unit_instance_id: string }> = []
   ) {
+    const snap = battleRef.current;
+    if (!snap?.battle_id) return;
     try {
-      const next = await api.setDirective(battle.battle_id, text, null, {
+      const next = await api.setDirective(snap.battle_id, text, null, {
         order_id: orderId,
         target_refs: targetRefs,
       });
@@ -908,14 +962,29 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
       setFocusPickMode(false);
       if (orderId !== "custom") playArmyOrderVo(orderId, battleRef.current?.commander_avatar);
       else playSfx("directive");
+      const label =
+        orderId === "custom"
+          ? text.trim()
+          : boot?.army_orders?.find((o: any) => o.id === orderId)?.label || orderId;
+      if (label) {
+        setResolveCue(resolvingRef.current ? `Order updated: ${label}` : `Army order: ${label}`);
+      }
     } catch (e: any) {
-      if (!handleConflict(e)) onError(e.message || String(e));
+      if (!handleConflict(e, { quiet: resolvingRef.current })) onError(e.message || String(e));
     }
   }
 
   async function queueDirective() {
     if (!directive.trim()) return;
     await issueArmyOrder("custom", directive.trim());
+    setCustomOrderOpen(false);
+    setOrderPick(null);
+  }
+
+  function openCustomOrder() {
+    setFocusPickMode(false);
+    setOrderPick("custom");
+    if (isPhone) setCustomOrderOpen(true);
   }
 
   const allUnits = useMemo(
@@ -932,6 +1001,21 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
     !introScanPlaying
   );
   const commanderActionsOpen = isCommanderTurn && !controlPhaseActive;
+  /** Army orders are radio traffic — issue anytime during live battle, including during unit autonomy. */
+  const armyOrdersEnabled = battle.status === "ACTIVE" && !introScanPlaying;
+
+  useEffect(() => {
+    if (controlPhaseActive && !controlPhaseSeenRef.current) {
+      const cmdId =
+        battle.control_phase?.commander_id ||
+        battle.commander?.unit_instance_id ||
+        battle.active_actor_id;
+      if (isPhone && cmdId) {
+        pixiRef.current?.zoomToMaxOnUnit(cmdId);
+      }
+    }
+    controlPhaseSeenRef.current = controlPhaseActive;
+  }, [controlPhaseActive, isPhone, battle.control_phase?.commander_id, battle.commander?.unit_instance_id, battle.active_actor_id]);
 
   const options = battle.legal_player_options || [];
   const attackOpts = options.filter(
@@ -953,7 +1037,6 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
   const objectiveLabel = battle.objective?.label || "Objective";
   const objectiveControl = battle.objective?.control || "empty";
 
-  const isPhone = useIsPhone();
   const mapHost = (
     <div className="battlefield-host" ref={hostRef} role="img" aria-label="Tactical battlefield" />
   );
@@ -1063,18 +1146,59 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
           </div>
         )}
         {controlPhaseActive && (
-          <div className="control-phase-panel" role="dialog" aria-label="Control Phase RAM Allocation">
-            <p className="control-phase-hint">
-              Control Phase — drag RAM from the commander onto blue-highlighted drones in signal. Small drones (one-ways / dogs / direct-attack) max 1 RAM each; larger drones max 3. Leftover RAM stays for your abilities.
-            </p>
+          <div
+            className={`control-phase-panel ${isPhone ? "control-phase-panel-phone" : ""}`}
+            role="dialog"
+            aria-label="Control Phase RAM Allocation"
+          >
+            {!isPhone && (
+              <p className="control-phase-hint">
+                Control Phase — drag RAM from the commander onto blue-highlighted drones in signal. Small drones (one-ways / dogs / direct-attack) max 1 RAM each; larger drones max 3. Leftover RAM stays for your abilities.
+              </p>
+            )}
             <button
               type="button"
               className="control-phase-complete"
               disabled={busy || resolving}
               onClick={() => void finishControlPhase()}
             >
-              RAM Allocation Complete
+              {isPhone ? "RAM Done" : "RAM Allocation Complete"}
             </button>
+          </div>
+        )}
+        {isPhone && customOrderOpen && (
+          <div className="custom-order-overlay" role="dialog" aria-label="Custom army order">
+            <div className="custom-order-card">
+              <strong>Custom Order</strong>
+              <textarea
+                value={directive}
+                onChange={(e) => setDirective(e.target.value)}
+                rows={4}
+                placeholder="Type your army order…"
+                autoFocus
+              />
+              <div className="row">
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={!directive.trim() || !armyOrdersEnabled}
+                  onClick={() => void queueDirective()}
+                >
+                  Issue
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    setCustomOrderOpen(false);
+                    setOrderPick(null);
+                    setDirective("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1126,80 +1250,78 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
             </button>
           </div>
 
-          {controlPhaseActive && (
-            <p className="muted hint">
-              Allocate RAM on the map, then press RAM Allocation Complete (lower left).
-            </p>
-          )}
-          {commanderActionsOpen && mode === "move" && (
-            <p className="muted hint">
-              {isPhone
-                ? "Tap a green hex to move."
-                : `Click a green hex within Speed to move${secondMoveCostsAttack ? " (another move spends your Attack)." : "."}`}
-            </p>
-          )}
-          {commanderActionsOpen && mode === "attack" && (
-            <div className="dest-list" aria-label="Attack targets">
-              {!attackOpts.length && <span className="muted">No legal targets in range/LOS.</span>}
-              {attackOpts.map((opt: any) => (
-                <button
-                  key={opt.option_id}
-                  className="option-btn"
-                  data-sfx="combat"
-                  disabled={busy || resolving}
-                  onClick={() => act(opt.option_id)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-          {commanderActionsOpen && mode === "ram" && (
-            <div className="dest-list" aria-label="RAM abilities">
+          <div className="commander-actions-body">
+            {controlPhaseActive && !isPhone && (
               <p className="muted hint">
-                RAM pool {selectedUnit?.ram_current ?? battle.commander?.ram_current ?? 0}/
-                {selectedUnit?.ram_capacity ?? battle.commander?.ram_capacity ?? 6}. Signal range{" "}
-                {battle.signal_radius ?? battle.commander?.signal_range ?? 12} hexes (fixed).
+                Allocate RAM on the map, then press RAM Allocation Complete (lower left).
               </p>
-              {ramCast && (
-                <div className="live">
-                  {ramCast.phase === "pick_unit" && `Targeting ${ramCast.abilityId.replaceAll("_", " ")} — click a unit.`}
-                  {ramCast.phase === "pick_hex" && "Spoof: click a cyan hex inside your signal ring."}
-                  {" "}
-                  <button type="button" className="ghost" onClick={() => { setRamCast(null); setResolveCue(null); }}>
-                    Cancel
-                  </button>
-                </div>
-              )}
-              {!ramOpts.length && !ramCast && (
-                <span className="muted">No RAM abilities selected for this commander.</span>
-              )}
-              {ramOpts.map((opt: any) => {
-                const aid = opt.preview?.ability_id;
-                const desc = boot?.abilities?.find((a: any) => a.id === aid)?.description;
-                return (
+            )}
+            {commanderActionsOpen && mode === "move" && (
+              <p className="muted hint">
+                {isPhone ? "Tap a green hex to move." : `Click a green hex within Speed to move${secondMoveCostsAttack ? " (another move spends your Attack)." : "."}`}
+              </p>
+            )}
+            {commanderActionsOpen && mode === "attack" && (
+              <div className="dest-list attack-list" aria-label="Attack targets">
+                {!attackOpts.length && <span className="muted">No targets in range.</span>}
+                {attackOpts.map((opt: any) => (
                   <button
                     key={opt.option_id}
-                    className={`option-btn ${ramCast?.abilityId === opt.preview?.ability_id ? "primary" : ""}`}
-                    disabled={busy || resolving || !!ramCast || !!opt.preview?.disabled}
-                    title={desc || opt.preview?.blocked_reason || opt.label}
+                    className="option-btn"
+                    data-sfx="combat"
+                    disabled={busy || resolving}
                     onClick={() => act(opt.option_id)}
                   >
                     {opt.label}
                   </button>
-                );
-              })}
-            </div>
-          )}
-          {commanderActionsOpen && mode === "end" && (
-            <p className="muted hint">Actions spent — End Activation to pass the turn.</p>
-          )}
-          {!isCommanderTurn && (
-            <p className="muted hint">
-              Unit autonomy
-              {currentArmyOrder ? ` · standing order: ${currentArmyOrder.raw_text}` : ""}
-            </p>
-          )}
+                ))}
+              </div>
+            )}
+            {commanderActionsOpen && mode === "ram" && (
+              <div className="dest-list ram-list" aria-label="RAM abilities">
+                <div className="ram-pool-line live">
+                  RAM {selectedUnit?.ram_current ?? battle.commander?.ram_current ?? 0}/
+                  {selectedUnit?.ram_capacity ?? battle.commander?.ram_capacity ?? 6}
+                </div>
+                {ramCast && (
+                  <button
+                    type="button"
+                    className="ghost ram-cancel"
+                    onClick={() => {
+                      setRamCast(null);
+                      setResolveCue(null);
+                    }}
+                  >
+                    Cancel targeting
+                  </button>
+                )}
+                {!ramOpts.length && !ramCast && (
+                  <span className="muted">No RAM abilities loaded.</span>
+                )}
+                {ramOpts.map((opt: any) => {
+                  const blocked = !!(opt.preview?.disabled || opt.preview?.blocked_reason);
+                  return (
+                    <button
+                      key={opt.option_id}
+                      className={`option-btn ram-ability-btn ${ramCast?.abilityId === opt.preview?.ability_id ? "primary" : ""} ${blocked ? "blocked" : ""}`}
+                      disabled={busy || resolving || !!ramCast}
+                      onClick={() => tryRamAbility(opt)}
+                    >
+                      {ramAbilityShortName(opt, boot)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {commanderActionsOpen && mode === "end" && (
+              <p className="muted hint">End Activation to pass the turn.</p>
+            )}
+            {!isCommanderTurn && (
+              <p className="muted hint">
+                {armyOrdersEnabled ? "Unit autonomy — shift orders in Radio." : "Unit autonomy."}
+              </p>
+            )}
+          </div>
 
           <div className="row cmd-row cmd-utils">
             <button
@@ -1253,130 +1375,89 @@ export function BattleScreen({ battle, boot, onUpdate, onError }: Props) {
         <div className="radio-cell stack" aria-label="Radio and army orders">
           <div className="radio-cell-header">
             <strong>Radio</strong>
-            <span className="muted">Free · anytime</span>
           </div>
-          {currentArmyOrder && !radioOpen && (
-            <div className="live army-order-active radio-standing">
-              {currentArmyOrder.raw_text}
+          <div className="directive-box orders-panel radio-panel">
+            <div className="order-chips stack">
+              {armyOrders.map((o: any) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  className={
+                    orderPick === o.id || (currentArmyOrder?.order_id === o.id && !orderPick) ? "primary" : ""
+                  }
+                  data-sfx="order"
+                  disabled={!armyOrdersEnabled}
+                  onClick={() => {
+                    if (o.requires_target) {
+                      setOrderPick(o.id);
+                      setFocusPickMode(true);
+                      setCustomOrderOpen(false);
+                      return;
+                    }
+                    void issueArmyOrder(o.id);
+                  }}
+                >
+                  {o.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={orderPick === "custom" ? "primary" : ""}
+                data-sfx="order"
+                disabled={!armyOrdersEnabled}
+                onClick={openCustomOrder}
+              >
+                {armyOrderCustom?.label || "Custom Order"}
+              </button>
             </div>
-          )}
-          <button
-            type="button"
-            className={`radio-btn ${radioOpen ? "on" : ""}`}
-            onClick={() => {
-              setRadioOpen((v) => !v);
-              setFocusPickMode(false);
-              setOrderPick(null);
-            }}
-          >
-            {radioOpen ? "Close Orders" : "Issue Orders"}
-          </button>
-          {radioOpen && (
-            <div className="directive-box command-phase orders-panel radio-panel">
-              <label className="muted">Army orders</label>
-              {currentArmyOrder && (
-                <div className="live army-order-active">
-                  Active: {currentArmyOrder.raw_text}
-                  {currentArmyOrder.order_id ? ` (${currentArmyOrder.order_id})` : ""}
-                </div>
-              )}
-              <div className="row cmd-row order-chips">
-                {armyOrders.map((o: any) => (
+            {focusPickMode && (
+              <div className="order-target-pick" aria-label="Order target picker">
+                {!oppositionTargets.length && <span className="muted">No targets.</span>}
+                {oppositionTargets.map((u: any) => (
                   <button
-                    key={o.id}
+                    key={u.unit_instance_id}
                     type="button"
-                    className={orderPick === o.id || (currentArmyOrder?.order_id === o.id && !orderPick) ? "primary" : ""}
-                    data-sfx="order"
-                    disabled={busy || resolving}
-                    onClick={() => {
-                      if (o.requires_target) {
-                        setOrderPick(o.id);
-                        setFocusPickMode(true);
-                        return;
-                      }
-                      void issueArmyOrder(o.id);
-                    }}
+                    className="option-btn"
+                    onClick={() =>
+                      void issueArmyOrder(orderPick || "focus_fire", "", [
+                        { kind: "unit", unit_instance_id: u.unit_instance_id },
+                      ])
+                    }
                   >
-                    {o.label}
+                    {u.display_name}
                   </button>
                 ))}
                 <button
                   type="button"
-                  className={orderPick === "custom" ? "primary" : ""}
-                  data-sfx="order"
-                  disabled={busy || resolving}
+                  className="ghost"
                   onClick={() => {
                     setFocusPickMode(false);
-                    setOrderPick("custom");
+                    setOrderPick(null);
                   }}
                 >
-                  {armyOrderCustom?.label || "Custom..."}
+                  Cancel
                 </button>
               </div>
-              {focusPickMode && (
-                <div className="dest-list" aria-label="Order target picker">
-                  <span className="muted hint">
-                    {orderPick === "paint_target"
-                      ? "Select target to paint for Airstrike:"
-                      : "Select Focus Fire target:"}
-                  </span>
-                  {!oppositionTargets.length && <span className="muted">No living opposition units.</span>}
-                  {oppositionTargets.map((u: any) => (
-                    <button
-                      key={u.unit_instance_id}
-                      type="button"
-                      className="option-btn"
-                      onClick={() =>
-                        void issueArmyOrder(orderPick || "focus_fire", "", [
-                          { kind: "unit", unit_instance_id: u.unit_instance_id },
-                        ])
-                      }
-                    >
-                      {u.display_name}
-                      {Array.isArray(u.statuses) && u.statuses.includes("painted") ? " (painted)" : ""}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => {
-                      setFocusPickMode(false);
-                      setOrderPick(null);
-                    }}
-                  >
+            )}
+            {!isPhone && orderPick === "custom" && (
+              <>
+                <textarea
+                  value={directive}
+                  onChange={(e) => setDirective(e.target.value)}
+                  rows={2}
+                  placeholder="Custom army order…"
+                />
+                <div className="row">
+                  <button disabled={!directive.trim() || !armyOrdersEnabled} onClick={() => void queueDirective()}>
+                    Issue
+                  </button>
+                  <button type="button" className="ghost" onClick={() => setOrderPick(null)}>
                     Cancel
                   </button>
                 </div>
-              )}
-              {orderPick === "custom" && (
-                <>
-                  <textarea
-                    value={directive}
-                    onChange={(e) => setDirective(e.target.value)}
-                    rows={2}
-                    placeholder="Type a custom army order…"
-                  />
-                  <div className="row">
-                    <button disabled={!directive.trim() || busy || resolving} onClick={() => void queueDirective()}>
-                      Issue custom order
-                    </button>
-                    <button type="button" className="ghost" onClick={() => setOrderPick(null)}>
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              )}
-              <div className="comms-drawer stack">
-                {!comms.length && <div className="muted">No radio traffic yet.</div>}
-                {comms.slice(-6).map((e, i) => (
-                  <div key={i} className={`comm-entry ${e.side || "system"}`}>
-                    <strong>{e.speaker}</strong>
-                    <div>{e.text}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
 
         <div className="hud-inspect">

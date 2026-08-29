@@ -18,7 +18,8 @@ system: |
   Destroying the enemy commander or army also wins.
   Always contest the objective. Do not wander the map edge while the center is empty.
 
-  Friendly units: obey active army orders in the directives list (order_id, tags, raw_text).
+  Friendly units: obey the active army orders in the directives list (order_id, tags, raw_text).
+  Orders can change mid-round — when you activate, follow the latest standing order even if it was issued while another unit was acting.
   - hold / defensive: prefer Hold; do not rush unless attacked at point-blank.
   - focus_fire: if a Fire option matches the focus target, take it.
   - screen / commander_protective: stay near the commander and engage nearby threats.

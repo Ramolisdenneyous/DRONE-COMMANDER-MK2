@@ -289,6 +289,7 @@ def directives(battle_id: str, body: CommandEnvelope, db: Session = Depends(get_
             battle,
             text,
             unit_id,
+            command_id=body.command_id,
             order_id=order_id,
             target_refs=target_refs,
         )

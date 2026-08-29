@@ -827,21 +827,39 @@ def control_phase_complete(
     return _control_phase_command(db, row, battle, command_id, expected_version, op="complete")
 
 
-def set_directives(
-    db: Session,
-    row: SessionRow,
+def _apply_directive_entry(battle: BattleState, entry: dict, unit_id: str | None, comm_text: str) -> None:
+    if unit_id:
+        battle.directives = [d for d in battle.directives if d.get("target_unit_id") != unit_id]
+    else:
+        battle.directives = [d for d in battle.directives if d.get("scope") == "unit"]
+    battle.directives.append(entry)
+    from ..domain.events import DomainEvent
+
+    battle.append_standing_order_events([DomainEvent(type="directive_updated", payload=entry)])
+    battle.communications.append(
+        {
+            "speaker": "Commander",
+            "side": "friendly",
+            "text": comm_text,
+            "unit_id": battle.commander().unit_instance_id if battle.commander() else None,
+        }
+    )
+
+
+def _build_directive_entry(
     battle: BattleState,
-    text: str,
-    unit_id: str | None = None,
     *,
-    order_id: str | None = None,
-    target_refs: list | None = None,
-) -> dict:
+    text: str,
+    unit_id: str | None,
+    order_id: str | None,
+    target_refs: list,
+) -> tuple[dict, str, str | None]:
+    """Validate against the live board and return (entry, comm_text, scoped_unit_id)."""
     catalog = get_catalog()
-    target_refs = list(target_refs or [])
     derived_tags: list[str] = []
     raw_text = (text or "").strip()
     resolved_order_id = order_id
+    scoped_unit_id = unit_id
 
     if order_id:
         order = catalog.army_orders.get(order_id)
@@ -870,8 +888,7 @@ def set_directives(
                     raw_text = f"Paint {target.display_name} for Airstrike."
                 else:
                     raw_text = f"{order.raw_text} Target: {target.display_name}."
-        # Army orders are global standing orders
-        unit_id = None
+        scoped_unit_id = None
     elif unit_id:
         target = battle.units.get(unit_id)
         if not target or target.side != Side.FRIENDLY:
@@ -891,8 +908,8 @@ def set_directives(
 
     entry = {
         "directive_id": str(uuid4()),
-        "scope": "unit" if unit_id else "global",
-        "target_unit_id": unit_id,
+        "scope": "unit" if scoped_unit_id else "global",
+        "target_unit_id": scoped_unit_id,
         "order_id": resolved_order_id,
         "raw_text": raw_text,
         "derived_tags": derived_tags,
@@ -902,25 +919,45 @@ def set_directives(
         "active": True,
         "queued": True,
     }
-    if unit_id:
-        battle.directives = [d for d in battle.directives if d.get("target_unit_id") != unit_id]
-    else:
-        # Replace prior army-wide / global standing orders
-        battle.directives = [d for d in battle.directives if d.get("scope") == "unit"]
-    battle.directives.append(entry)
-    from ..domain.events import DomainEvent
+    comm_prefix = "Unit directive" if scoped_unit_id else "Army order"
+    return entry, f"{comm_prefix}: {raw_text}", scoped_unit_id
 
-    battle.append_events([DomainEvent(type="directive_updated", payload=entry)])
-    battle.communications.append(
-        {
-            "speaker": "Commander",
-            "side": "friendly",
-            "text": f"Army order: {raw_text}",
-            "unit_id": battle.commander().unit_instance_id if battle.commander() else None,
-        }
+
+def set_directives(
+    db: Session,
+    row: SessionRow,
+    battle: BattleState,
+    text: str,
+    unit_id: str | None = None,
+    *,
+    command_id: str | None = None,
+    order_id: str | None = None,
+    target_refs: list | None = None,
+) -> dict:
+    receipts = row.command_receipts or {}
+    if command_id and command_id in receipts:
+        return receipts[command_id]["result"]
+    target_refs = list(target_refs or [])
+
+    # Reload authoritative state so standing orders cannot overwrite an in-flight agent resolve.
+    fresh = load_battle_from_row(row)
+    if fresh is not None:
+        battle = fresh
+
+    entry, comm_text, scoped_unit_id = _build_directive_entry(
+        battle,
+        text=text,
+        unit_id=unit_id,
+        order_id=order_id,
+        target_refs=target_refs,
     )
+    _apply_directive_entry(battle, entry, scoped_unit_id, comm_text)
+    result = player_snapshot(battle)
+    if command_id:
+        receipts[command_id] = {"result": result}
+        row.command_receipts = receipts
     persist_battle(db, row, battle)
-    return player_snapshot(battle)
+    return result
 
 
 class ConflictError(Exception):
